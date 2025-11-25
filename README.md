@@ -35,13 +35,29 @@ cd "e:\projects\AI-Powered Resume Scoring and Feedback"
 npm install
 ```
 
-2. Start the Node server (if `server.js` is the entrypoint):
+2. Create a `.env` file with your database credentials (copy from `.env.example`):
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then edit `.env` with your actual database credentials:
+```
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password_here
+DB_NAME=resume_portal
+PORT=3000
+ML_API_URL=http://localhost:8000/predict
+```
+
+3. Start the Node server:
 
 ```powershell
 node server.js
 ```
 
-3. Open the UI in your browser at `http://localhost:3000` (adjust port if `server.js` uses a different port). Check `server.js` for the actual port number and available routes.
+4. Open the UI in your browser at `http://localhost:3000`
 
 **Quick Start — Python (model API & training)**
 1. Create and activate a virtual environment (PowerShell):

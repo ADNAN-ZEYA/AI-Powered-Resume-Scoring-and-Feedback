@@ -1,4 +1,5 @@
 // server.js - Main entry point
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
@@ -22,12 +23,12 @@ if (!fs.existsSync(uploadsDir)) {
     console.log('Uploads directory already exists.');
 }
 
-// Database config
+// Database config (from environment variables)
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'zishan786',
-  database: 'resume_portal'
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'resume_portal'
 };
 
 // DB connection pool
