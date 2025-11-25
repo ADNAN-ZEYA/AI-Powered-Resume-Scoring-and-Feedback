@@ -1,46 +1,49 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI
+from pydantic import BaseModel
 import joblib
+import pandas as pd
 import traceback
 
-app = Flask(__name__)
+app = FastAPI()
 
-# Load the model
+# Load model
 model = joblib.load("model/resume_score_model.pkl")
 
-@app.route('/')
+# Input schema
+class ResumeInput(BaseModel):
+    skills: str
+    experience: float
+    education: str
+    certifications: str
+    projects: int
+    salary: float
+
+@app.get("/")
 def home():
-    return "Resume Score API is running."
+    return {"message": "Resume Score API is running."}
 
-@app.route('/predict', methods=['POST'])
-def predict():
+@app.post("/predict")
+def predict(data: ResumeInput):
     try:
-        data = request.get_json()
-
-        # Create input as DataFrame
+        # Convert input to DataFrame
         input_data = {
-            "Skills": [data["skills"]],
-            "Experience (Years)": [data["experience"]],
-            "Education": [data["education"]],
-            "Certifications": [data["certifications"]],
-            "Projects Count": [data["projects"]],
-            "Salary Expectation ($)": [data["salary"]]
+            "Skills": [data.skills],
+            "Experience (Years)": [data.experience],
+            "Education": [data.education],
+            "Certifications": [data.certifications],
+            "Projects Count": [data.projects],
+            "Salary Expectation ($)": [data.salary]
         }
 
-        import pandas as pd
         input_df = pd.DataFrame.from_dict(input_data)
 
         # Predict score
         score = model.predict(input_df)[0]
 
-        return jsonify({
-            "score": round(score, 2)
-        })
+        return {"score": round(score, 2)}
 
     except Exception as e:
-        return jsonify({
+        return {
             "error": str(e),
             "trace": traceback.format_exc()
-        })
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+        }

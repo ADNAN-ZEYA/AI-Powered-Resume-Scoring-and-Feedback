@@ -23,9 +23,9 @@ A small project that scores resumes and returns feedback using a machine-learnin
 **Requirements**
 - Node.js (14+ recommended) and `npm`.
 - Python 3.8+ for ML scripts and API.
-- Common Python packages: `pandas`, `scikit-learn`, `flask` (or `fastapi`/`uvicorn`) depending on `ml_model/resume_api.py` implementation.
+- Python packages: `pandas`, `scikit-learn`, `fastapi`, `uvicorn`, `joblib`, `numpy`, `matplotlib` (see `ml_model/requirements.txt`).
 
-Note: If a `requirements.txt` or `pyproject.toml` is present, install from it instead of the generic package list below.
+Note: Always install from `ml_model/requirements.txt` to ensure all dependencies are properly pinned.
 
 **Quick Start — Node (frontend/server)**
 1. Install Node dependencies:
@@ -52,23 +52,19 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-2. Install Python packages (if `requirements.txt` exists):
+2. Install Python packages:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-If `requirements.txt` is not present, install common deps:
+3. Run the model API using Uvicorn (serves predictions on port 8000):
 
 ```powershell
-pip install pandas scikit-learn flask
+uvicorn resume_api:app --reload
 ```
 
-3. Run the model API (serves predictions):
-
-```powershell
-python resume_api.py
-```
+The API will be available at `http://localhost:8000`. Visit `http://localhost:8000/docs` for interactive API documentation.
 
 4. Train or retrain the model:
 
@@ -76,38 +72,56 @@ python resume_api.py
 python train_model.py
 ```
 
-Training reads `AI_Resume_Screening.csv` and should write artifacts into `model/` (see `train_model.py` for specifics).
+Training reads `AI_Resume_Screening.csv` and saves artifacts into `model/`.
+
+5. (Optional) Run comprehensive model evaluation and testing:
+
+```powershell
+python test.py
+```
+
+This generates evaluation metrics (`model_metrics.json`), feature importances (`top_feature_importances.csv`), and residual plots (`model_residuals.png`).
 
 **API / Integration**
-- The repository may expose an HTTP endpoint for scoring resumes — check `server.js` and `ml_model/resume_api.py` to confirm exact endpoint paths and port numbers.
-- Example (replace URL/endpoint with the real one from `server.js`):
+The Node.js server on `localhost:3000` calls the Python FastAPI model server running on `localhost:8000`.
 
+**FastAPI Model Server** (runs on port 8000):
+- Root: `GET http://localhost:8000/` — health check
+- Predict: `POST http://localhost:8000/predict` — score a resume
+
+Example request to FastAPI:
 ```powershell
-curl -X POST -F "resume=@C:\path\to\resume.pdf" http://localhost:3000/api/score
+$body = @{
+    skills = "Python, React, AWS"
+    experience = 5
+    education = "B.Tech"
+    certifications = "AWS Certified"
+    projects = 8
+    salary = 80000
+} | ConvertTo-Json
+
+curl -X POST http://localhost:8000/predict `
+  -H "Content-Type: application/json" `
+  -d $body
 ```
 
-Or call the Python model API directly (if it exposes an endpoint on port 5000):
-
-```powershell
-curl -X POST -F "resume=@C:\path\to\resume.pdf" http://localhost:5000/score
-```
+Or visit `http://localhost:8000/docs` for interactive Swagger UI documentation.
 
 **Configuration & Notes**
-- Review `server.js` to see how the Node server invokes the Python model (if it does) and the expected payload.
+- The Node server (`server.js`) expects the FastAPI model server to be running at `http://localhost:5000/predict`.
 - Ensure `uploads/` is writable by the server process.
-- If the ML API uses a different server (e.g., FastAPI + Uvicorn), consult `ml_model/resume_api.py` for the correct run command.
+- The ML model uses FastAPI + Uvicorn for async request handling and automatic API documentation.
+- Model is trained using scikit-learn's RandomForestRegressor with a ColumnTransformer pipeline.
 
-**Adding a `requirements.txt` (recommended)**
-If you plan to use the Python model commonly, create `ml_model/requirements.txt` with pinned versions, for example:
-
-```
-pandas==1.5.3
-scikit-learn==1.2.2
-flask==2.2.3
-joblib==1.2.0
-```
-
-Then install with `pip install -r requirements.txt`.
+**Python Dependencies** (`ml_model/requirements.txt`)
+All Python dependencies are pinned to specific versions:
+- `numpy==1.26.4` — numerical computing
+- `pandas==2.0.3` — data manipulation
+- `scikit-learn==1.2.2` — ML algorithms
+- `joblib==1.3.2` — model serialization
+- `matplotlib==3.8.0` — visualization
+- `fastapi==0.110.0` — API framework
+- `uvicorn==0.29.0` — ASGI server
 
 **Development Tips**
 - Use virtual environments for Python work to avoid dependency conflicts.
@@ -115,14 +129,20 @@ Then install with `pip install -r requirements.txt`.
 - If you change the ML model/data, retrain using `train_model.py` and verify via `resume_api.py`.
 
 **File map (summary)**
-- `server.js` — Node server
-- `package.json` — Node dependencies & scripts
-- `public/` — Front-end static assets
-- `ml_model/AI_Resume_Screening.csv` — training data
-- `ml_model/train_model.py` — training script
-- `ml_model/resume_api.py` — Python model server
-- `ml_model/model/` — saved model artifacts
-- `uploads/` — uploaded resumes
+- `server.js` — Node.js server (port 3000)
+- `package.json` — Node.js dependencies & scripts
+- `public/` — Front-end static assets (HTML, CSS, JS)
+- `ml_model/` — Python ML module
+  - `AI_Resume_Screening.csv` — training dataset
+  - `train_model.py` — model training script
+  - `resume_api.py` — FastAPI model server (port 8000)
+  - `test.py` — comprehensive model evaluation & testing
+  - `requirements.txt` — Python dependencies
+  - `model/` — saved model artifacts
+  - `model_metrics.json` — evaluation metrics (generated by test.py)
+  - `model_residuals.png` — residual plot (generated by test.py)
+  - `top_feature_importances.csv` — feature importances (generated by test.py)
+- `uploads/` — uploaded resumes (server-generated)
 
 **Contributing**
 - Fork and create a branch for your feature or fix.

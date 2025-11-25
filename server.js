@@ -26,7 +26,7 @@ if (!fs.existsSync(uploadsDir)) {
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: 'root',
+  password: 'zishan786',
   database: 'resume_portal'
 };
 
