@@ -201,5 +201,3 @@ The model demonstrates excellent predictive performance with minimal overfitting
 **License**
 This repository does not include a license file. If you want to make it open-source, consider adding an `MIT` license or another license that fits your needs.
 
-**Contact / Author**
-For questions or help, open an issue in this repository or contact the maintainer.
